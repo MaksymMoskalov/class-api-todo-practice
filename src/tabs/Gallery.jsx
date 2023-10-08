@@ -9,10 +9,12 @@ export class Gallery extends Component {
     page: 1,
     images: [],
     total: 0,
+    error: null,
   };
 
   hendlSubmiForm = text => {
-    this.setState({ qwery: text });
+    this.setState({ qwery: text, page: 1, images: [], total: 0 });
+    
   };
 
   componentDidUpdate(prevProps, prevState) {
@@ -33,17 +35,41 @@ export class Gallery extends Component {
         total: total_results,
       }));
     } catch (error) {
+      this.setState({ error: error.message })
       console.log('error: ', error);
     }
   };
 
+  onLoadMore = () => {
+    this.setState(prevState => ({ page: prevState.page + 1}))
+  }
+
   render() {
-    console.log(this.state.qwery);
+    const { images, total, error, qwery } = this.state;
+
     return (
       <>
         <SearchForm onSubmit={this.hendlSubmiForm} />
-
-        {/* <Text textAlign="center">Sorry. There are no images ... 😭</Text> */}
+        {error && (
+          <Text textAlign="center">Sorry. There are some error {error} ... 😭</Text>
+        )}
+        {qwery === !'' && images.length === 0 && (
+          <Text textAlign="center">
+            Sorry. There are no images with request {qwery}... 😭
+          </Text>
+        )}
+        <Grid>
+          {images.map(({ id, avg_color, alt, src: { large } }) => (
+            <GridItem key={id}>
+              <CardItem color={avg_color}>
+                <img src={large} alt={alt} />
+              </CardItem>
+            </GridItem>
+          ))}
+        </Grid>
+        {images.length < total && (
+          <Button onClick={this.onLoadMore}>Load More</Button>
+        )}
       </>
     );
   }
